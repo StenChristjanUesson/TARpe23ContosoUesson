@@ -192,6 +192,8 @@ namespace ContosoUniversity.Controllers
                 return NotFound();
             }
             var DepartmentToBaseOn = await _context.Departments
+                .Include(i => i.Administrator)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.DepartmentID == id);
             if (DepartmentToBaseOn == null)
             {
@@ -199,6 +201,7 @@ namespace ContosoUniversity.Controllers
             }
             return View(DepartmentToBaseOn);
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> BaseOn([Bind("Name,Budget,StartTime,RowVersion,Instructor,Personality")] Department BasedOnDepartment)
