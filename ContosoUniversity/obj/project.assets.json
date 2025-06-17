@@ -4147,11 +4147,19 @@
   "project": {
     "version": "1.0.0",
     "restore": {
+<<<<<<< Updated upstream
       "projectUniqueName": "C:\\Users\\StenU\\Desktop\\Sten'i KooliTööd\\TARpe23ContosoUesson\\ContosoUniversity\\ContosoUniversity.csproj",
       "projectName": "ContosoUniversity",
       "projectPath": "C:\\Users\\StenU\\Desktop\\Sten'i KooliTööd\\TARpe23ContosoUesson\\ContosoUniversity\\ContosoUniversity.csproj",
       "packagesPath": "C:\\Users\\StenU\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\StenU\\Desktop\\Sten'i KooliTööd\\TARpe23ContosoUesson\\ContosoUniversity\\obj\\",
+=======
+      "projectUniqueName": "C:\\Users\\opilane\\Source\\Repos\\TARpe23\\Uesson\\TARpe23ContosoUesson\\ContosoUniversity\\ContosoUniversity.csproj",
+      "projectName": "ContosoUniversity",
+      "projectPath": "C:\\Users\\opilane\\Source\\Repos\\TARpe23\\Uesson\\TARpe23ContosoUesson\\ContosoUniversity\\ContosoUniversity.csproj",
+      "packagesPath": "C:\\Users\\opilane\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\opilane\\Source\\Repos\\TARpe23\\Uesson\\TARpe23ContosoUesson\\ContosoUniversity\\obj\\",
+>>>>>>> Stashed changes
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -4231,7 +4239,11 @@
             "privateAssets": "all"
           }
         },
+<<<<<<< Updated upstream
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200/PortableRuntimeIdentifierGraph.json"
+=======
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
+>>>>>>> Stashed changes
       }
     }
   }
