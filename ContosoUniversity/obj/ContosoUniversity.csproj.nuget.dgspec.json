@@ -1,19 +1,6 @@
 {
   "format": 1,
   "restore": {
-<<<<<<< Updated upstream
-    "C:\\Users\\StenU\\Desktop\\Sten'i KooliTööd\\TARpe23ContosoUesson\\ContosoUniversity\\ContosoUniversity.csproj": {}
-  },
-  "projects": {
-    "C:\\Users\\StenU\\Desktop\\Sten'i KooliTööd\\TARpe23ContosoUesson\\ContosoUniversity\\ContosoUniversity.csproj": {
-      "version": "1.0.0",
-      "restore": {
-        "projectUniqueName": "C:\\Users\\StenU\\Desktop\\Sten'i KooliTööd\\TARpe23ContosoUesson\\ContosoUniversity\\ContosoUniversity.csproj",
-        "projectName": "ContosoUniversity",
-        "projectPath": "C:\\Users\\StenU\\Desktop\\Sten'i KooliTööd\\TARpe23ContosoUesson\\ContosoUniversity\\ContosoUniversity.csproj",
-        "packagesPath": "C:\\Users\\StenU\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\StenU\\Desktop\\Sten'i KooliTööd\\TARpe23ContosoUesson\\ContosoUniversity\\obj\\",
-=======
     "C:\\Users\\opilane\\Source\\Repos\\TARpe23\\Uesson\\TARpe23ContosoUesson\\ContosoUniversity\\ContosoUniversity.csproj": {}
   },
   "projects": {
@@ -25,13 +12,12 @@
         "projectPath": "C:\\Users\\opilane\\Source\\Repos\\TARpe23\\Uesson\\TARpe23ContosoUesson\\ContosoUniversity\\ContosoUniversity.csproj",
         "packagesPath": "C:\\Users\\opilane\\.nuget\\packages\\",
         "outputPath": "C:\\Users\\opilane\\Source\\Repos\\TARpe23\\Uesson\\TARpe23ContosoUesson\\ContosoUniversity\\obj\\",
->>>>>>> Stashed changes
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\StenU\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\opilane\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -105,11 +91,7 @@
               "privateAssets": "all"
             }
           },
-<<<<<<< Updated upstream
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200/PortableRuntimeIdentifierGraph.json"
-=======
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
->>>>>>> Stashed changes
         }
       }
     }

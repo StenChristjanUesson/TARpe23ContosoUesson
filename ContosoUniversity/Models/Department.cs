@@ -21,22 +21,13 @@ namespace ContosoUniversity.Models
         /*
          * kaks oma andmetüüpi osakonna jaoks
          */
-<<<<<<< Updated upstream
-        public ICollection<Department>? Scholarship { get; set; }
-        [Display(Name = "A legendary student who has received a scholarship")]
-        public string? TurkishDepartmentDescription {  get; set; } 
+
+        public Student? StudentGrades { get; set; } 
+        [Display(Name = "This students Grades are:")]
+        public string? Personality { get; set; }
         public int? InstructorID { get; set; }
         [Timestamp]
         public byte? RowVersion { get; set; }
-=======
-
-        public Student? StudentGrades { get; set; } //Minu isiklikud hinded.
-        [Display(Name = "This students Grades are:")]
-        public string? Personality { get; set; } //Minu õpilaste iseloomu esindavad näited.
-        public int? InstructorID { get; set; }
-        [Timestamp]
-        public byte? RowVersion { get; set; } //Sometype of timestamp
->>>>>>> Stashed changes
         public Instructor? Administrator { get; set; }
         public ICollection<Course>? Courses { get; set; }
     }

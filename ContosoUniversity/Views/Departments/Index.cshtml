@@ -11,7 +11,7 @@
         <tr>
             <th> @Html.DisplayNameFor(model => model.Name)</th>
             <th> @Html.DisplayNameFor(model => model.Administrator)</th>
-            <th> @Html.DisplayNameFor(model => model.TurkishDepartmentDescription)</th>
+            <th> @Html.DisplayNameFor(model => model.Personality)</th>
             <th> @Html.DisplayNameFor(model => model.Budget)</th>
             <th> @Html.DisplayNameFor(model => model.StartDate)</th>
             <th> @Html.DisplayNameFor(model => model.RowVersion)</th>
@@ -24,7 +24,7 @@
                     <tr>
                         <td> @Html.DisplayFor(modelItem => department.Name)</td>
                         <td> @Html.DisplayFor(modelItem => department.Administrator.FullName)</td>
-                        <td> @Html.DisplayFor(modelItem => department.TurkishDepartmentDescription)</td>
+                        <td> @Html.DisplayFor(modelItem => department.Personality)</td>
                         <td> @Html.DisplayFor(modelItem => department.Budget)</td>
                         <td> @Html.DisplayFor(modelItem => department.StartDate)</td>
                         <td> @Html.DisplayFor(modelItem => department.RowVersion)</td>
