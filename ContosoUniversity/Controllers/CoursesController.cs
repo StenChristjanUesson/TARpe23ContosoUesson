@@ -1,70 +1,131 @@
 ﻿using ContosoUniversity.Data;
 using ContosoUniversity.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace ContosoUniversity.Controllers
 {
     public class CoursesController : Controller
     {
+
         private readonly SchoolContext _context;
+
         public CoursesController(SchoolContext context)
         {
             _context = context;
         }
         public async Task<IActionResult> Index()
         {
-            var schoolContext = _context.Courses.Include(d => d.CourseID);
-            return View(await schoolContext.ToListAsync());
+            return View(await _context.Courses.ToListAsync());
+
         }
+        //Create controller
         [HttpGet]
-        public async Task<IActionResult> DetailsDelete(int? id)
+        public IActionResult Create()
+        {
+            ViewData["RequestedView"] = "Create";
+            return View("CreateEdit");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("CourseID,Title,Credits")] Course course)
+        {
+            ModelState.Remove("CourseID");
+            int lastid = await _context.Courses.CountAsync();
+            course.CourseID += lastid++;
+            if (ModelState.IsValid)
+            {
+
+                _context.Courses.Add(course);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            return View("Index");
+        }
+        //Edit controller
+        [HttpGet]
+        public IActionResult Edit([Bind("CourseID,Title,Credits")] int? id)
+        {
+            ViewData["RequestedView"] = "Edit";
+            Course course = _context.Courses.Find(id);
+            return View("CreateEdit");
+        }
+        [HttpPost]
+        public async Task<IActionResult> Edit([Bind("CourseID,Title,Credits")] Course course)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Courses.Update(course);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            return View("CreateEdit", course);
+        }
+        //Clone controller
+        public async Task<ActionResult> Clone(int? id, Course course)
         {
             if (id == null)
             {
                 return NotFound();
             }
+            var Course = await _context.Courses.FirstOrDefaultAsync(m => m.CourseID == id);
 
-            var course = await _context.Courses
-                .FirstOrDefaultAsync(m => m.CourseID == id);
-            
+            var CourseClone = new Course();
+            CourseClone.Credits = Course.Credits;
+            CourseClone.Title = Course.Title;
+            ModelState.Remove("CourseID");
+            if (ModelState.IsValid)
+            {
+                _context.Courses.Add(CourseClone);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        //Details controller
+        public async Task<IActionResult> Details(int? id)
+        {
+            ViewData["RequestedView"] = "Details";
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var course = await _context.Courses.FirstOrDefaultAsync(m => m.CourseID == id);
             if (course == null)
             {
                 return NotFound();
             }
-            return View(course);
+            return View("DetailsDelete", course);
         }
-        [HttpPost, ActionName("DetailsDelete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var Course = await _context.Courses.FindAsync(id);
 
-            _context.Courses.Remove(Course);
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction(nameof(Index));
-        }
-        public async Task<IActionResult> Clone(int? id)
+        //Delete controller
+        [HttpGet]
+        public async Task<IActionResult> Delete(int? id)
         {
+            ViewData["RequestedView"] = "Delete";
             if (id == null)
             {
                 return NotFound();
             }
-            var clonedCourse = await _context.Courses
-                .FirstOrDefaultAsync(m => m.CourseID == id);
-            if (clonedCourse == null)
+
+            var course = await _context.Courses.FirstOrDefaultAsync(m => m.CourseID == id);
+            if (course == null)
             {
                 return NotFound();
             }
-            int lastID = _context.Courses.OrderBy(u => u.CourseID).Last().CourseID;
-            lastID++;
-            var selectedCourse = new Course();
-            selectedCourse.Title = clonedCourse.Title;
-            selectedCourse.Credits = clonedCourse.Credits;
-            selectedCourse.Enrollments = clonedCourse.Enrollments;
-            _context.Courses.Add(selectedCourse);
-            await _context.SaveChangesAsync(true);
+            return View("DetailsDelete", course);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var course = await _context.Courses.FindAsync(id);
+            _context.Courses.Remove(course);
+            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
     }

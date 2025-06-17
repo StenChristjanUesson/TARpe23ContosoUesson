@@ -7,14 +7,13 @@ namespace ContosoUniversity.Controllers
 {
     public class InstructorsController : Controller
     {
-        private readonly SchoolContext _context;
-
+        private readonly SchoolContext _context; 
         public InstructorsController(SchoolContext context)
         {
             _context = context;
         }
         [HttpGet]
-        public async Task<IActionResult> Index(int? id, int? courseId)
+        public async Task <IActionResult> Index(int? id, int? courseId)
         {
             var vm = new InstructorIndexData();
             vm.Instructors = await _context.Instructors
@@ -49,7 +48,6 @@ namespace ContosoUniversity.Controllers
             return View(vm);
 
         }
-
         [HttpGet]
         public IActionResult Create()
         {
@@ -57,43 +55,105 @@ namespace ContosoUniversity.Controllers
             instructor.CourseAssignments = new List<CourseAssignment>();
             return View();
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Instructor instructor /*string? selectedCourses*/)
+        public async Task<IActionResult> Create(Instructor instructor)
         {
-            //if (selectedCourses == null)
-            //{
-            //    instructor.CourseAssignments = new List<CourseAssignment>();
-            //    foreach (var course in selectedCourses)
-            //    {
-            //        var courseToAdd = new CourseAssignment
-            //        {
-            //            InstructorID = instructor.ID,
-            //            CourseID = course
-            //        };
-            //        instructor.CourseAssignments.Add(courseToAdd);
-            //    }
-            //}
-            //ModelState.Remove();
-            //ModelState.Remove(selectedCourses);
-            if (ModelState.IsValid) 
+            if(ModelState.IsValid)
             {
                 _context.Add(instructor);
                 await _context.SaveChangesAsync();
                 return RedirectToAction("Index");
             }
-            //PopulateAssignedCourseData(instructor); //uuendab instructori juures olevaid kursuseid
+            PopulateAssignedCourseData(instructor);
             return View(instructor);
         }
 
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var instructor = await _context.Instructors
+                .FirstOrDefaultAsync(m => m.ID == id);
+
+            if (instructor == null)
+            {
+                return NotFound();
+            }
+            return View(instructor);
+        }
+
+
+        public async Task<ActionResult> Edit([Bind("ID,LastName,FirstName,HireDate,City")] Instructor Instructor)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Instructors.Update(Instructor);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            return View(Instructor);
+        }
+
+
+        public async Task<ActionResult> Clone(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var Instructor = await _context.Instructors.FirstOrDefaultAsync(m => m.ID == id);
+
+            var InstructorClone = new Instructor();
+            InstructorClone.LastName = Instructor.LastName;
+            InstructorClone.FirstName = Instructor.FirstName;
+            InstructorClone.HireDate = Instructor.HireDate;
+            InstructorClone.City = Instructor.City;
+
+
+
+            if (ModelState.IsValid)
+            {
+                _context.Instructors.Add(InstructorClone);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var instructor = await _context.Instructors
+                .FirstOrDefaultAsync(m => m.ID == id);
+            if (instructor == null)
+            {
+                return NotFound();
+            }
+            return View(instructor);
+        }
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var instructor = await _context.Instructors.FindAsync(id);
+            _context.Instructors.Remove(instructor);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+
         private void PopulateAssignedCourseData(Instructor instructor)
         {
-            var allCourses = _context.Courses; //leiame kõik kursused
-            var instructorCourses = new HashSet<int>(instructor.CourseAssignments.Select(c => c.CourseID));
-            //valime kursused kus courseid on õpetajal olemas
-            var vm = new List<AssignedCourseData>(); //teeme viewmodeli jaoks uue nimekirja
-            foreach (var course in allCourses) 
+            var allCourses = _context.Courses;
+            var instructorCourses = new HashSet<int>(collection: instructor.CourseAssignments.Select(c => c.CourseID));
+            var vm = new List<AssignedCourseData>(); 
+            foreach (var course in allCourses)
             {
                 vm.Add(new AssignedCourseData
                 {
@@ -103,112 +163,6 @@ namespace ContosoUniversity.Controllers
                 });
             }
             ViewData["Courses"] = vm;
-        }
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null) //kui id on tühi/null, siis Instructor ei leita
-            {
-                return NotFound();
-            }
-
-            var instructor = await _context.Instructors // tehakse Instructori objekt andmebaasis oleva id järgi
-                .FirstOrDefaultAsync(m => m.ID == id);
-
-            if (instructor == null) //kui Instructior objekt on tühi/null, siis ka Instructor ei leita
-            {
-                return NotFound();
-            }
-
-            return View(instructor);
-        }
-        /// <summary>
-        /// Asünkroonne DeleteConfirmed meetod.
-        /// Kustutab kaasaantud ID alusel ära Instructori andmebaasist ning tagastab kasutaja Index vaatesse.
-        /// </summary>
-        /// <param name="id">Kustutatava Instructor ID</param>
-        /// <returns>Kustutab Instructor andmed andmebaasist ära ning tagastab kasutajale Index vaate</returns>
-        //Delete POST meetod, teostab andmebaasis vajaliku muudatuse. ehk kustutab andme ära
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var instructor = await _context.Instructors.FindAsync(id); //otsime andmebaasist Instructor id järgi ja paneme ta "Instructor" nimelisse muutujasse.
-
-            _context.Instructors.Remove(instructor);
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction(nameof(Index));
-        }
-        public async Task<IActionResult> Clone(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-            //var existingInstructor = Details(id);
-            //return View(existingStudent);
-            var clonedInstuctors = await _context.Instructors // tehakse Instructori objekt andmebaasis oleva id järgi
-                .FirstOrDefaultAsync(m => m.ID == id);
-            if (clonedInstuctors == null)
-            {
-                return NotFound();
-            }
-            int lastID = _context.Instructors.OrderBy(u => u.ID).Last().ID;
-            lastID++;
-            var selectedInstuctor = new Instructor();
-            selectedInstuctor.FirstMidName = clonedInstuctors.FirstMidName;
-            selectedInstuctor.LastName = clonedInstuctors.LastName;
-            //selectedInstuctor.OfficeAssignment.Location = clonedInstuctors.OfficeAssignment.Location; See ei tööta kuna database intructoris pole database OfficeAssignmentsi Datad
-            selectedInstuctor.HireDate = clonedInstuctors.HireDate;
-            _context.Instructors.Add(selectedInstuctor);
-            await _context.SaveChangesAsync(true);
-            return RedirectToAction("Index");
-        }
-        /// <summary>
-        /// Asünkronne Edit GET meetod.
-        /// Leiab andmebaasist päringus oleva id järgi õpilase
-        /// ning tagastab vaate koos selle õpilase infoga
-        /// kus selle õpilase infot muuta ja üle salvestada saab.
-        /// </summary>
-        /// <param name="id">Otsitava õpilase ID</param>
-        /// <returns>Tagastab kasutajale vaate, koos õpilase muudetavate andmetega.</returns>
-        [HttpGet]
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-            var InstructorToEdit = await _context.Instructors
-                .FirstOrDefaultAsync(m => m.ID == id);
-            if (InstructorToEdit == null)
-            {
-                return NotFound();
-            }
-            return View(InstructorToEdit);
-        }
-        /// <summary>
-        /// Asünkroonne POST meetod, mis uuendab andmebaasis oleva Instructori, võttes selleks
-        /// andmed vaatest "modifiedInstructor" nimelise objekti seest. Päringule on juurde binditud
-        /// andmebaasi jaoks vajalikud andmeväljad.
-        /// </summary>
-        /// <param name="modifiedInstructor"></param>
-        /// <returns>Tagastab kasutaja "Index" vaatesse koos nüüd muudetud Instructoriga</returns>
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit([Bind("ID,LastName,FirstMidName,Hiredate,Instructor")] Instructor modifiedInstructor)
-        {
-            if (ModelState.IsValid)
-            {
-                if (modifiedInstructor.ID == null)
-                {
-                    return BadRequest();
-                }
-                _context.Instructors.Update(modifiedInstructor);
-                await _context.SaveChangesAsync();
-                return RedirectToAction("Index");
-            }
-            return View(modifiedInstructor);
         }
     }
 }

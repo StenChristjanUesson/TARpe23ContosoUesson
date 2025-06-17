@@ -1,34 +1,57 @@
 ﻿@model IEnumerable<ContosoUniversity.Models.Course>
+
 @{
-    ViewData["Title"] = "Courses";
+    ViewData["Title"] = "Index";
 }
-<h1>Departments</h1>
+
+<h1>Courses</h1>
+
 <p>
-    <a asp-action="Create">Make a new Course</a>
+    <a asp-action="Create" class="btn btn-primary">Create</a>
 </p>
+
 <table class="table">
     <thead>
         <tr>
-            <th> @Html.DisplayNameFor(model => model.Title)</th>
-            <th> @Html.DisplayNameFor(model => model.Credits)</th>
-            <th> @Html.DisplayNameFor(model => model.Enrollments)</th>
-            <th>Available actions</th>
+            <th>
+                @Html.DisplayNameFor(model => model.First().CourseID)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.First().Title)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.First().Credits)
+            </th>
+            <th></th>
         </tr>
     </thead>
-
     <tbody>
-        @foreach (var course in Model)
+        @if(Model == null)
         {
-            <tr>
-                <th> @Html.DisplayFor(modelItem => course.Title)</th>>
-                <th> @Html.DisplayFor(modelItem => course.Credits)</th>>
-                <th> @Html.DisplayFor(modelItem => course.Enrollments)</th>>
-                <td>
-                    <a asp-action="Details" asp-route-id="@course.CourseID" class="btn btn-dark">Details</a>
-                    <a asp-action="Edit" asp-route-id="@course.CourseID" class="btn btn-dark">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@course.CourseID" class="btn btn-dark">Disintegrate</a>
-                </td>
-            </tr>
+            
         }
+        else
+        {
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.CourseID)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Title)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Credits)
+                    </td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.CourseID" class="btn btn-dark">Edit</a>
+                        <a asp-action="Details" asp-route-id="@item.CourseID" class="btn btn-dark">Details</a>
+                        <a asp-action="Delete" asp-route-id="@item.CourseID" class="btn btn-dark">Delete</a>
+                    </td>
+                </tr>
+            }
+        }
+
     </tbody>
 </table>

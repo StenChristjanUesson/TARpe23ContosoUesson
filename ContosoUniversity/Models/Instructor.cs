@@ -9,37 +9,35 @@ namespace ContosoUniversity.Models
         public int ID { get; set; }
         [Required]
         [StringLength(50)]
-        [Display(Name = "Last Name")]
+        [Display(Name = "LastName")]
         public string LastName { get; set; }
         [Required]
         [StringLength(50)]
-        [Column("FirstName")]
-        [Display(Name = "First Name")]
-        public string FirstMidName { get; set; }
+        [Display(Name = "FirstName")]
+        public string FirstName { get; set; }
 
-        [Display(Name = "Full Name")]
-        public string FullName //uus andmeväli moodustatakse olemasolevaist, mitte ei küsita kasutajalt korduvalt sama asja
-        { get 
-            { return LastName + ", " + FirstMidName; } 
+        [Display(Name = "FullName")]
+        public string FullName 
+        {
+            get
+            { return LastName + "," + FirstName; }
         }
         [DataType(DataType.Date)]
         [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}")]
         [Display(Name = "Hired on:")]
         public DateTime HireDate { get; set; }
-
         public ICollection<CourseAssignment>? CourseAssignments { get; set; }
         public OfficeAssignment? OfficeAssignment { get; set; }
 
-        //igaühel on oma kolm unikaalset propertyt
+        public Gender Genderr { get; set; }
+        
+        public int Age { get; set; }
+        [Display(Name = "City")]
+        public string City { get; set; }
 
-        public Mood? Mood { get; set; } //õpetaja tuju
-        [Display(Name = "Kutsetunnistuse #:")]
-        public string? VocationCredential { get; set; } //kutsekoja kutseregistri tunnistuse väljastuse number
-        public int? WorkYears { get; set; } //tööaastaid selles asutuses
-    }
-
-    public enum Mood
-    {
-        Happy, Sad, Anxious, Puzzled, HighAF, Curious, Stuborn
+        public enum Gender
+        {
+            Male, female
+        }
     }
 }

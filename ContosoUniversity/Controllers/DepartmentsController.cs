@@ -1,15 +1,16 @@
 ﻿using ContosoUniversity.Data;
 using ContosoUniversity.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 
 namespace ContosoUniversity.Controllers
 {
     public class DepartmentsController : Controller
     {
         private readonly SchoolContext _context;
+
         public DepartmentsController(SchoolContext context)
         {
             _context = context;
@@ -18,7 +19,7 @@ namespace ContosoUniversity.Controllers
         public async Task<IActionResult> Index()
         {
             var schoolContext = _context.Departments.Include(d => d.Administrator);
-            return View(await schoolContext.ToListAsync());
+            return View(await (schoolContext.ToListAsync()));
         }
 
         public async Task<IActionResult> Details(int? id)
@@ -29,26 +30,25 @@ namespace ContosoUniversity.Controllers
             }
             string query = "SELECT * FROM Departments WHERE DepartmentID = {0}";
             var department = await _context.Departments
-                .FromSqlRaw(query, id)
-                .Include(d => d.Administrator)
-                .AsNoTracking()
-                .FirstOrDefaultAsync();
-            if (department == null) 
+                                            .FromSqlRaw(query, id)
+                                            .Include(d => d.Administrator)
+                                            .AsNoTracking()
+                                            .FirstOrDefaultAsync();
+            if (department == null)
             {
                 return NotFound();
             }
             return View(department);
         }
-
         [HttpGet]
-        public IActionResult Create()
+        public IActionResult Create() 
         {
             ViewData["InstructorID"] = new SelectList(_context.Instructors, "ID", "FullName");
-            return View();
+            return View(); 
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name,Budget,StartTime,RowVersion,Instructor,Personality")] Department department)
+        public async Task<IActionResult> Create([Bind("Name, Budget, StartDate, RowVersion, InstructorID, Scholarship")] Department department)
         {
             if (!ModelState.IsValid)
             {
@@ -56,103 +56,130 @@ namespace ContosoUniversity.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction("Index");
             }
-            ViewData["InstructorID"] = new SelectList(_context.Instructors, "ID", "Fullname", department.InstructorID);
+            ViewData["InstructorID"] = new SelectList(_context.Instructors, "ID", "FullName", department.InstructorID);
             return View(department);
+
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<ActionResult> Edit(int id)
         {
             if (id == null)
             {
                 return NotFound();
             }
-            var DepartmentToEdit = await _context.Departments
-                .Include(i => i.Administrator)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.DepartmentID == id);
-            if (DepartmentToEdit == null)
-            {
-                return NotFound();
-            }
-            ViewData["InstructorID"] = new SelectList(_context.Instructors, "ID", "FullName", DepartmentToEdit.InstructorID);
-            return View(DepartmentToEdit);
+            var departmentToEdit = await _context.Departments
+                    .Include(i => i.Administrator)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(m => m.DepartmentID == id);
+            if (departmentToEdit == null) { return NotFound(); }
+            ViewData["InstructorID"] = new SelectList(_context.Instructors, "ID", "FullName", departmentToEdit.InstructorID);
+            return View(departmentToEdit);
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, byte[] rowVersion)
         {
-            ModelState.Remove("StudentGrades");
-            ModelState.Remove("RowVersion");
-            ModelState.Remove("Courses");
-            if (ModelState.IsValid)
+            ModelState.Remove("rowVersion");
+            if (id == null) { return NotFound(); }
+            var departmentToUpdate = await _context.Departments.Include(i => i.Administrator)
+                .FirstOrDefaultAsync(m => m.DepartmentID == id);
+            if (departmentToUpdate == null)
             {
-                if (id == null)
+                Department departmentIsDeleted = new Department();
+                await TryUpdateModelAsync(departmentIsDeleted);
+                ModelState.AddModelError(string.Empty, "unable to save changes. Department has already been removed.");
+                ViewData["InstructorID"] = new SelectList(_context.Instructors, "ID", "LastName", departmentIsDeleted.InstructorID);
+                return View(departmentIsDeleted);
+            }
+            _context.Entry(departmentToUpdate).Property("RowVersion").OriginalValue = rowVersion;
+
+            var tryUpdate = await TryUpdateModelAsync<Department>(departmentToUpdate,
+                "",
+                s => s.Name,
+                s => s.StartDate,
+                s => s.Budget,
+                s => s.TurkishDepartmentDescription,
+                s => s.InstructorID,
+                s => s.Scholarship);
+
+            if (tryUpdate)
+            {
+                try
                 {
-                    return BadRequest();
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction("Index");
                 }
-                var DepartmentToUpdate = await _context.Departments
-                    .Include(i => i.Administrator)
-                    .FirstOrDefaultAsync(m => m.DepartmentID == id);
-                if (DepartmentToUpdate == null)
+                catch (DbUpdateConcurrencyException ex)
                 {
-                    Department departmentIsDeleted = new Department();
-                    await TryUpdateModelAsync(departmentIsDeleted);
-                    ModelState.AddModelError(string.Empty, "Unable to save chages. Department has already been removed.");
-                    ViewData["InstructorID"] = new SelectList(_context.Instructors, "ID", "FullName", DepartmentToUpdate.InstructorID);
-                    return View(DepartmentToUpdate);
-                }
-                _context.Entry(DepartmentToUpdate).Property("RowVersion").OriginalValue = rowVersion;
+                    var exceptionEntry = ex.Entries.Single();
+                    var clientValues = (Department)exceptionEntry.Entity;
+                    var databaseEntry = exceptionEntry.GetDatabaseValues();
 
-                var tryUpdate = await TryUpdateModelAsync<Department>(DepartmentToUpdate,
-                    "",
-                    s => s.Name,
-                    s => s.StartTime,
-                    s => s.Budget,
-                    s => s.InstructorID,
-                    s => s.Personality
-                    );
-
-                if (tryUpdate)
-                {
-                    try
+                    if (databaseEntry == null)
                     {
-                        await _context.SaveChangesAsync();
-                        return RedirectToAction("Index");
+                        ModelState.AddModelError(string.Empty, "unable to save changes, department has already been removed.");
                     }
-                    catch(DbUpdateConcurrencyException ex)
+                    else
                     {
-                        var exceptonEntry = ex.Entries.Single();
-                        var clientValues = (Department)exceptonEntry.Entity;
-                        var databaseEntry = exceptonEntry.GetDatabaseValues();
-
-                        if (databaseEntry == null)
+                        var databaseValues = (Department)databaseEntry.ToObject();
+                        if (databaseValues.Name != clientValues.Name) { ModelState.AddModelError("Name", $"Current value: {databaseValues.Name}"); }
+                        if (databaseValues.StartDate != clientValues.StartDate) { ModelState.AddModelError("Name", $"Current value: {databaseValues.StartDate}"); }
+                        if (databaseValues.Budget != clientValues.Budget) { ModelState.AddModelError("Name", $"Current value: {databaseValues.Budget}"); }
+                        if (databaseValues.Scholarship != clientValues.Scholarship) { ModelState.AddModelError("Name", $"Current value: {databaseValues.Scholarship}"); }
+                        if (databaseValues.TurkishDepartmentDescription != clientValues.TurkishDepartmentDescription) { ModelState.AddModelError("Name", $"Current value: {databaseValues.TurkishDepartmentDescription}"); }
+                        if (databaseValues.InstructorID != clientValues.InstructorID) { ModelState.AddModelError("Name", $"Current value: {databaseValues.InstructorID}"); }
                         {
-                            ModelState.AddModelError(string.Empty, "unable to save changes. Department has already been removed.");
+                            Instructor databaseHasThisInstructor = await _context.Instructors.FirstOrDefaultAsync(i => i.ID == databaseValues.InstructorID);
+                            ModelState.AddModelError("Name", $"Current value: {databaseValues.InstructorID}");
                         }
-                        else
-                        {
-                            var databaseValues = (Department)databaseEntry.ToObject();
-
-                            if (databaseValues.Name != clientValues.Name) { ModelState.AddModelError("Name", $"Current Vlaue: {databaseValues.Name}"); }
-                            if (databaseValues.StartTime != clientValues.StartTime) { ModelState.AddModelError("ŚtartTime", $"Current Vlaue: {databaseValues.StartTime}"); }
-                            if (databaseValues.Budget != clientValues.Budget) { ModelState.AddModelError("Budget", $"Current Vlaue: {databaseValues.Budget}"); }
-                            if (databaseValues.Personality != clientValues.Personality) { ModelState.AddModelError("Personality", $"Current Vlaue: {databaseValues.Personality}"); }
-                            if (databaseValues.InstructorID != clientValues.InstructorID)
-                            {
-                                Instructor databaseHasThisInstructor = await _context.Instructors.FirstOrDefaultAsync(i => i.ID == databaseValues.InstructorID);
-                                ModelState.AddModelError("InstructorID", $"Current Vlaue: {databaseValues.InstructorID}");
-                            }
-                            ModelState.AddModelError(string.Empty, "Warning, changes you are about to save, differ from info in the DB." +
-                                " It appears this department was already changed after you selected the version with old info" +
-                                "Click back if this new info is already correct otherwise, click save again to oversave the department anyway.");
-                            DepartmentToUpdate.RowVersion = databaseValues.RowVersion;
-                            ModelState.Remove("RowVersion");
-                        }
+                        ModelState.AddModelError(string.Empty, "warning, changes you are about to save differ from the info in the DB" + "It appears this department was already" +
+                            "changed after you selected the version with the old info." +
+                            "click back if this new info is already correct, otherwise, click save again to oversave the department anyways.");
+                        departmentToUpdate.RowVersion = databaseValues.RowVersion;
+                        ModelState.Remove("RowVersion");
                     }
+
                 }
             }
-            return View(Index);
+            ViewData["InstructorID"] = new SelectList(_context.Instructors, "ID", "Fullname", departmentToUpdate.InstructorID);
+            return View(departmentToUpdate);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> BaseOn(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var department = await _context.Departments
+                .Include(d => d.Administrator)
+                .FirstOrDefaultAsync(m => m.DepartmentID == id);
+
+            if (department == null)
+            {
+                return NotFound();
+            }
+            ViewData["InstructorID"] = new SelectList(_context.Instructors, "ID", "FullName", department.InstructorID);
+            return View(department);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> Make([Bind("InstructorID,Name,Budget,StartDate,TurkishDepartmentDescription")] Department department)
+        {
+            _context.Add(department);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Index");
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> MakeDelete([Bind("InstructorID,Name,Budget,StartDate,TurkishDepartmentDescription")] Department department)
+        {
+            _context.Departments.Remove(department);
+            _context.Add(department);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Index");
         }
 
         public async Task<IActionResult> Delete(int? id)
@@ -161,83 +188,23 @@ namespace ContosoUniversity.Controllers
             {
                 return NotFound();
             }
-
             var department = await _context.Departments
                 .FirstOrDefaultAsync(m => m.DepartmentID == id);
-
             if (department == null)
             {
                 return NotFound();
             }
             return View(department);
         }
-        
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var department = await _context.Departments.FindAsync(id); 
-
+            var department = await _context.Departments.FindAsync(id);
             _context.Departments.Remove(department);
             await _context.SaveChangesAsync();
-
             return RedirectToAction(nameof(Index));
         }
 
-        [HttpGet]
-        public async Task<IActionResult>BaseOn(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-            var DepartmentToBaseOn = await _context.Departments
-                .Include(i => i.Administrator)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.DepartmentID == id);
-            if (DepartmentToBaseOn == null)
-            {
-                return NotFound();
-            }
-            return View(DepartmentToBaseOn);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> BaseOn([Bind("Name,Budget,StartTime,RowVersion,Instructor,Personality")] Department BasedOnDepartment)
-        {
-            if (ModelState.IsValid)
-            {
-                if (BasedOnDepartment.DepartmentID == null)
-                {
-                    return BadRequest();
-                }
-                int lastID = _context.Departments.OrderBy(u => u.DepartmentID).Last().DepartmentID;
-                lastID++;
-                var selectedDepartment = new Department();
-                selectedDepartment.Name = BasedOnDepartment.Name;
-                selectedDepartment.Budget = BasedOnDepartment.Budget;
-                selectedDepartment.StartTime = BasedOnDepartment.StartTime;
-                selectedDepartment.InstructorID = BasedOnDepartment.InstructorID;
-                selectedDepartment.Personality = BasedOnDepartment.Personality;
-                _context.Departments.Add(selectedDepartment);
-                await _context.SaveChangesAsync(true);
-                ViewData["InstructorID"] = new SelectList(_context.Instructors, "ID", "Fullname", BasedOnDepartment.InstructorID);
-                return RedirectToAction("Index");
-            }
-            return View(BasedOnDepartment);
-        }
-        //public async Task<IActionResult> Clone(int? id)
-        //{
-        //    int lastID = _context.Students.OrderBy(u => u.ID).Last().ID;
-        //    lastID++;
-        //    var selectedStudent = new Student();
-        //    selectedStudent.FirstMidName = clonedStudent.FirstMidName;
-        //    selectedStudent.LastName = clonedStudent.LastName;
-        //    selectedStudent.EnrollmentDate = clonedStudent.EnrollmentDate;
-        //    _context.Students.Add(selectedStudent);
-        //    await _context.SaveChangesAsync(true);
-        //    return RedirectToAction("Index");
-        //}
     }
 }
