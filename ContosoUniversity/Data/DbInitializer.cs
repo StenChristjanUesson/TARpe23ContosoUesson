@@ -106,26 +106,26 @@ namespace ContosoUniversity.Data
             {
                 new Department
                 {
-                    Name = "InfoTech",
+                    Name = "Department of Finance",
                     Budget = 0,
                     StartDate = DateTime.Parse("2024-09-01"),
-                    TurkishDepartmentDescription = "Skibidi tuvaleti. Skibidi tuvalet Skibidi tuvalet. Skibidi tuvalet Skibidi tuvalet.",
+                    DepartmentDescription = "Money Grubbers",
                     InstructorID = 1
                 },
                 new Department
                 {
-                    Name = "Skibidi toilet",
+                    Name = "Department of Contracts",
                     Budget = 0,
                     StartDate = DateTime.Parse("2024-04-09"),
-                    TurkishDepartmentDescription = "nçok usta skibidi tuvalet.",
+                    DepartmentDescription = "Those who read between lines",
                     InstructorID = 2
                 },
                 new Department
                 {
-                    Name = "Skibidi sigma",
+                    Name = "Department of PR",
                     Budget = 0,
                     StartDate = DateTime.Parse("2024-02-03"),
-                    TurkishDepartmentDescription = "skibidi tuvaleti çok sigma."
+                    DepartmentDescription = "Look at How Fabulous we are!"
                 }
             };
             context.Departments.AddRange(departments);

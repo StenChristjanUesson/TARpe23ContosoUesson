@@ -47,7 +47,7 @@ internal class Program
             try
             {
                 var context = services.GetRequiredService<SchoolContext>();
-                DbInitializer.Initialize(context);
+                DbInitializer.Initializer(context);
             }
             catch (Exception ex)
             {

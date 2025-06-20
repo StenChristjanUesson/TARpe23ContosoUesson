@@ -21,9 +21,8 @@ namespace ContosoUniversity.Models
         /*
          * kaks oma andmetüüpi osakonna jaoks
          */
-
-        public Student? StudentGrades { get; set; } 
-        [Display(Name = "This students Grades are:")]
+        public string? DepartmentDescription { get; set; } 
+        [Display(Name = "This Departments are:")]
         public string? Personality { get; set; }
         public int? InstructorID { get; set; }
         [Timestamp]

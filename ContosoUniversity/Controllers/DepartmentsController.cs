@@ -99,90 +99,72 @@ namespace ContosoUniversity.Controllers
                 s => s.Name,
                 s => s.StartDate,
                 s => s.Budget,
-                s => s.Pers,
+                s => s.DepartmentDescription,
                 s => s.InstructorID,
-                s => s.Scholarship);
+                s => s.Personality);
 
             if (tryUpdate)
             {
                 try
                 {
-                    ModelState.AddModelError(string.Empty, "unable to save changes, department has already been removed.");
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction("Index");
                 }
-                else
+                catch (DbUpdateConcurrencyException ex)
+                {
+                    var exceptionEntry = ex.Entries.Single();
+                    var clientValues = (Department)exceptionEntry.Entity;
+                    var databaseEntry = exceptionEntry.GetDatabaseValues();
+
+                    if (databaseEntry == null)
+                    {
+                        ModelState.AddModelError(string.Empty, "unable to save changes, department has already been removed.");
+                    }
+                    else
                     {
                         var databaseValues = (Department)databaseEntry.ToObject();
                         if (databaseValues.Name != clientValues.Name) { ModelState.AddModelError("Name", $"Current value: {databaseValues.Name}"); }
                         if (databaseValues.StartDate != clientValues.StartDate) { ModelState.AddModelError("Name", $"Current value: {databaseValues.StartDate}"); }
                         if (databaseValues.Budget != clientValues.Budget) { ModelState.AddModelError("Name", $"Current value: {databaseValues.Budget}"); }
-                        if (databaseValues.Scholarship != clientValues.Scholarship) { ModelState.AddModelError("Name", $"Current value: {databaseValues.Scholarship}"); }
                         if (databaseValues.Personality != clientValues.Personality) { ModelState.AddModelError("Name", $"Current value: {databaseValues.Personality}"); }
+                        if (databaseValues.DepartmentDescription != clientValues.DepartmentDescription) { ModelState.AddModelError("Name", $"Current value: {databaseValues.DepartmentDescription}"); }
                         if (databaseValues.InstructorID != clientValues.InstructorID) { ModelState.AddModelError("Name", $"Current value: {databaseValues.InstructorID}"); }
-                    {
-                        Instructor databaseHasThisInstructor = await _context.Instructors.FirstOrDefaultAsync(i => i.ID == databaseValues.InstructorID);
-                        ModelState.AddModelError("Name", $"Current value: {databaseValues.InstructorID}");
-                    }
-                    ModelState.AddModelError(string.Empty, "warning, changes you are about to save differ from the info in the DB" + "It appears this department was already" +
-                        "changed after you selected the version with the old info." +
-                        "click back if this new info is already correct, otherwise, click save again to oversave the department anyways.");
-                    departmentToUpdate.RowVersion = databaseValues.RowVersion;
-                    ModelState.Remove("RowVersion");
-                    catch (DbUpdateConcurrencyException ex)
-                    {
-                        var exceptionEntry = ex.Entries.Single();
-                        var clientValues = (Department)exceptionEntry.Entity;
-                        var databaseEntry = exceptionEntry.GetDatabaseValues();
-
-                        if (databaseEntry == null)
                         {
-                            ModelState.AddModelError(string.Empty, "unable to save changes, department has already been removed.");
+                            Instructor databaseHasThisInstructor = await _context.Instructors.FirstOrDefaultAsync(i => i.ID == databaseValues.InstructorID);
+                            ModelState.AddModelError("Name", $"Current value: {databaseValues.InstructorID}");
                         }
-                        else
-                        {
-                            var databaseValues = (Department)databaseEntry.ToObject();
-
-                            if (databaseValues.Name != clientValues.Name) { ModelState.AddModelError("Name", $"Current Vlaue: {databaseValues.Name}"); }
-                            if (databaseValues.StartTime != clientValues.StartTime) { ModelState.AddModelError("ŚtartTime", $"Current Vlaue: {databaseValues.StartTime}"); }
-                            if (databaseValues.Budget != clientValues.Budget) { ModelState.AddModelError("Budget", $"Current Vlaue: {databaseValues.Budget}"); }
-                            if (databaseValues.Personality != clientValues.Personality) { ModelState.AddModelError("Personality", $"Current Vlaue: {databaseValues.Personality}"); }
-                            if (databaseValues.InstructorID != clientValues.InstructorID) { ModelState.AddModelError("Name", $"Current value: {databaseValues.InstructorID}"); }
-                            {
-                                Instructor databaseHasThisInstructor = await _context.Instructors.FirstOrDefaultAsync(i => i.ID == databaseValues.InstructorID);
-                                ModelState.AddModelError("Name", $"Current value: {databaseValues.InstructorID}");
-                            }
-                            ModelState.AddModelError(string.Empty, "warning, changes you are about to save differ from the info in the DB" + "It appears this department was already" +
-                                "changed after you selected the version with the old info." +
-                                "click back if this new info is already correct, otherwise, click save again to oversave the department anyways.");
-                            departmentToUpdate.RowVersion = databaseValues.RowVersion;
-                            ModelState.Remove("RowVersion");
-                        }
-
+                        ModelState.AddModelError(string.Empty, "warning, changes you are about to save differ from the info in the DB" + "It appears this department was already" +
+                            "changed after you selected the version with the old info." +
+                            "click back if this new info is already correct, otherwise, click save again to oversave the department anyways.");
+                        departmentToUpdate.RowVersion = databaseValues.RowVersion;
+                        ModelState.Remove("RowVersion");
                     }
-
                 }
-                ViewData["InstructorID"] = new SelectList(_context.Instructors, "ID", "Fullname", departmentToUpdate.InstructorID);
-                return View(departmentToUpdate);
             }
+            ViewData["InstructorID"] = new SelectList(_context.Instructors, "ID", "Fullname", departmentToUpdate.InstructorID);
+            return View(departmentToUpdate);
         }
 
-            [HttpGet]
+        [HttpGet]
         public async Task<IActionResult> BaseOn(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-            var department = await _context.Departments
-                .Include(d => d.Administrator)
-                .FirstOrDefaultAsync(m => m.DepartmentID == id);
-
-            if (department == null)
-            {
-                return NotFound();
-            }
-            ViewData["InstructorID"] = new SelectList(_context.Instructors, "ID", "FullName", department.InstructorID);
+            var department = _context.Departments.Find(id);
             return View(department);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> BaseOn(Department department)
+        {
+            if (ModelState.IsValid)
+            {
+                var baseonDepartment = department;
+                _context.Departments.Add(baseonDepartment);
+                await _context.SaveChangesAsync();                
+                return RedirectToAction(nameof(Index));
+            }
+            return View(department);
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Make([Bind("InstructorID,Name,Budget,StartDate,Personality")] Department department)
@@ -191,6 +173,7 @@ namespace ContosoUniversity.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction("Index");
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> MakeDelete([Bind("InstructorID,Name,Budget,StartDate,Personality")] Department department)
@@ -215,6 +198,7 @@ namespace ContosoUniversity.Controllers
             }
             return View(department);
         }
+
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
