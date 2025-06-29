@@ -174,16 +174,6 @@ namespace ContosoUniversity.Controllers
             return RedirectToAction("Index");
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> MakeDelete([Bind("InstructorID,Name,Budget,StartDate,Personality")] Department department)
-        {
-            _context.Departments.Remove(department);
-            _context.Add(department);
-            await _context.SaveChangesAsync();
-            return RedirectToAction("Index");
-        }
-
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
