@@ -41,10 +41,10 @@ namespace ContosoUniversity.Controllers
             return View(department);
         }
         [HttpGet]
-        public IActionResult Create() 
+        public IActionResult Create()
         {
             ViewData["InstructorID"] = new SelectList(_context.Instructors, "ID", "FullName");
-            return View(); 
+            return View();
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -159,7 +159,7 @@ namespace ContosoUniversity.Controllers
             {
                 var baseonDepartment = department;
                 _context.Departments.Add(baseonDepartment);
-                await _context.SaveChangesAsync();                
+                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
             return View(department);
@@ -172,6 +172,35 @@ namespace ContosoUniversity.Controllers
             _context.Add(department);
             await _context.SaveChangesAsync();
             return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> MakeDelete([Bind("InstructorID,Name,Budget,StartDate,Personality")] Department department)
+        {
+            if (ModelState.IsValid)
+            {
+                var existingDepartment = await _context.Departments.FindAsync(department.DepartmentID);
+
+                if (existingDepartment == null)
+                {
+                    return NotFound();
+                }
+                var departmentCopy = new Department
+                {
+                    Name = department.Name,
+                    Budget = department.Budget,
+                    StartDate = department.StartDate,
+                    Personality = department.Personality,
+                    InstructorID = department.InstructorID
+                };
+
+                _context.Remove(existingDepartment);
+                _context.Add(departmentCopy);
+                await _context.SaveChangesAsync();
+                return RedirectToAction("Index");
+            }
+            return View(department);
         }
 
         public async Task<IActionResult> Delete(int? id)
